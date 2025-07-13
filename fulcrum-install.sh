@@ -2,7 +2,7 @@
 
 # Fulcrum Electrum Server Setup Script for Debian 12 Bookworm
 # Configures Fulcrum with Let's Encrypt SSL, using an existing Bitcoin node
-# Accepts connections on port 443
+# Accepts connections on port 443, uses qmake for building
 
 # Exit on error
 set -e
@@ -37,20 +37,27 @@ apt-get update
 
 # Install required dependencies
 echo "Installing dependencies..."
-apt-get install -y build-essential cmake libssl-dev zlib1g-dev qtbase5-dev qt5-qmake qtbase5-dev-tools libzmq3-dev certbot python3-certbot-nginx git
+apt-get install -y build-essential qtbase5-dev qt5-qmake qtbase5-dev-tools libssl-dev zlib1g-dev libzmq3-dev certbot python3-certbot-nginx git
 
 # Install Fulcrum
 echo "Installing Fulcrum..."
 cd /opt
+# Remove any existing Fulcrum directory to avoid conflicts
+rm -rf Fulcrum
+# Clone Fulcrum repository
 git clone https://github.com/cculianu/Fulcrum.git
+# Verify Fulcrum.pro exists
+if [ ! -f Fulcrum/Fulcrum.pro ]; then
+    echo "Error: Failed to clone Fulcrum or Fulcrum.pro missing. Check network or GitHub repository."
+    exit 1
+fi
 cd Fulcrum
-mkdir build
-cd build
-cmake ..
+qmake Fulcrum.pro
 make -j$(nproc)
 make install
 cd /opt
-rm -rf Fulcrum
+# Keep source directory for debugging; remove manually if desired
+# rm -rf Fulcrum
 
 # Create Fulcrum user and directories
 mkdir -p /var/lib/fulcrum
@@ -84,7 +91,7 @@ rpcuser = $BITCOIN_RPC_USER
 rpcpassword = $BITCOIN_RPC_PASSWORD
 rpchost = $BITCOIN_RPC_HOST
 rpcport = $BITCOIN_RPC_PORT
-workers = 8
+workers = 16
 rpc_timeout = 60
 fast-sync = true
 
@@ -96,7 +103,7 @@ ssl_port = 443
 certfile = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
 keyfile = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
 banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
-maxclients = 10000
+maxclients = 5000
 clienttimeout = 300
 rpcport = 8000
 rpchost = 127.0.0.1
