@@ -12,12 +12,18 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to prompt for user input with validation
+# Function to prompt for user input with validation. This section likely needs work.
 prompt_for_input() {
     local prompt="$1"
     local var_name="$2"
     local value
     read -p "$prompt" value
+    if [[ "$var_name" == "BITCOIN_RPC_HOST" && -z "$value" ]]; then
+        value="127.0.0.1"
+    fi
+    if [[ "$var_name" == "BITCOIN_RPC_PORT" && -z "$value" ]]; then
+        value="8332"
+    fi
     if [ -z "$value" ]; then
         echo "Error: Input for $var_name cannot be empty."
         exit 1
@@ -29,14 +35,12 @@ prompt_for_input() {
         fi
     fi
     if [[ "$var_name" == "BITCOIN_RPC_HOST" ]]; then
-        value=${value:-127.0.0.1}
         if ! [[ "$value" =~ ^[0-9.]+$ || "$value" =~ ^[a-zA-Z0-9.-]+$ ]]; then
             echo "Error: Invalid $var_name format. Use IP or hostname."
             exit 1
         fi
     fi
     if [[ "$var_name" == "BITCOIN_RPC_PORT" ]]; then
-        value=${value:-8332}
         if ! [[ "$value" =~ ^[0-9]+$ && "$value" -ge 1 && "$value" -le 65535 ]]; then
             echo "Error: $var_name must be a valid port number (1-65535)."
             exit 1
