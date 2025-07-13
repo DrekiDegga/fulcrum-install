@@ -19,8 +19,28 @@ prompt_for_input() {
     local value
     read -p "$prompt" value
     if [ -z "$value" ]; then
-        echo "Error: Input cannot be empty."
+        echo "Error: Input for $var_name cannot be empty."
         exit 1
+    fi
+    if [[ "$var_name" == "BITCOIN_RPC_USER" || "$var_name" == "BITCOIN_RPC_PASSWORD" ]]; then
+        if [[ "$value" =~ [[:space:]] || "$value" =~ [^a-zA-Z0-9_-] ]]; then
+            echo "Error: $var_name cannot contain spaces or special characters (except _ and -)."
+            exit 1
+        fi
+    fi
+    if [[ "$var_name" == "BITCOIN_RPC_HOST" ]]; then
+        value=${value:-127.0.0.1}
+        if ! [[ "$value" =~ ^[0-9.]+$ || "$value" =~ ^[a-zA-Z0-9.-]+$ ]]; then
+            echo "Error: Invalid $var_name format. Use IP or hostname."
+            exit 1
+        fi
+    fi
+    if [[ "$var_name" == "BITCOIN_RPC_PORT" ]]; then
+        value=${value:-8332}
+        if ! [[ "$value" =~ ^[0-9]+$ && "$value" -ge 1 && "$value" -le 65535 ]]; then
+            echo "Error: $var_name must be a valid port number (1-65535)."
+            exit 1
+        fi
     fi
     eval "$var_name='$value'"
 }
