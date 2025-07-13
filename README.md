@@ -1,4 +1,5 @@
-Fulcrum Electrum Server Setup ScriptThis Bash script automates the installation and configuration of a high-capacity [Fulcrum](https://github.com/cculianu/Fulcrum) Electrum server on Debian 12 "Bookworm". It sets up Fulcrum to serve Electrum clients over TCP (port 50001) and SSL (port 443 with Let’s Encrypt), connecting to an existing Bitcoin Core node. The script is optimized for public servers with robust performance settings for high client loads.Features
+# Fulcrum Electrum Server Setup Script
+This Bash script automates the installation and configuration of a high-capacity [Fulcrum](https://github.com/cculianu/Fulcrum) Electrum server on Debian 12 "Bookworm". It sets up Fulcrum to serve Electrum clients over TCP (port 50001) and SSL (port 443 with Let’s Encrypt), connecting to an existing Bitcoin Core node. The script is optimized for public servers with robust performance settings for high client loads.Features
 
 - Installs Fulcrum with all dependencies, using qmake for compilation.
 - Configures Let’s Encrypt SSL for secure connections on port 443.
@@ -7,16 +8,16 @@ Fulcrum Electrum Server Setup ScriptThis Bash script automates the installation 
 - Sets up logging to /var/log/fulcrum.log and systemd journal.
 - Configures firewall rules (if ufw is installed) for ports 443 and 50001.
 
-Requirements
+## Requirements
 
 - OS: Debian 12 "Bookworm".
-- Bitcoin Node: Fully synced Bitcoin Core with txindex=1 and server=1 (\~500 GB storage).
-- Hardware: 16+ CPU cores, 32 GB RAM, 1.3 TB SSD (800 GB for Fulcrum index, \~500 GB for Bitcoin Core).
+- Bitcoin Node: Fully synced Bitcoin Core with txindex=1 and server=1.
+- Hardware: 8+ CPU cores, 16 GB RAM, 1.3 TB SSD (800 GB for Fulcrum index, \~500 GB for Bitcoin Core).
 - Network: Ports 443 (SSL) and 50001 (TCP) open.
 - DNS: A public DNS name (e.g., [electrum.example.com](http://electrum.example.com)) resolving to your server’s public IP.
 - Permissions: Run as root (via sudo).
 
-Installation
+## Installation
 
 1. Clone or download this repository:
 
@@ -45,7 +46,7 @@ Installation
    - Bitcoin RPC username and password (from bitcoin.conf).
    - Bitcoin RPC host (default: 127.0.0.1) and port (default: 8332).
 
-Post-Installation
+## Post-Installation
 
 - Verify Setup:
   - Check service:
@@ -88,7 +89,8 @@ Post-Installation
   sudo systemctl restart fulcrum
   ```
 
-ConfigurationThe script generates /etc/fulcrum/fulcrum.conf with:
+## Configuration
+The script generates /etc/fulcrum/fulcrum.conf with:
 
 - Bitcoin Node: Connects via bitcoind=<http://user:pass@host:port>.
 - High-Capacity Settings: Supports 10,000 clients (maxclients=10000), 4 GB cache (cache=4000), 16 workers (workers=16), and 16 database shards (db-num-shards=16).
@@ -138,9 +140,10 @@ Customize settings in /etc/fulcrum/fulcrum.conf for your hardware (e.g., increas
   cat /var/log/fulcrum.log
   ```
 
-Notes
+## Notes
 
 - Performance: Optimized for 16+ cores, 32 GB RAM. Adjust cache, db-max-mem, and db-num-shards for your hardware.
 - Security: Uses # for comments in fulcrum.conf (e.g., # High-capacity client limit).
 
-ContributingSubmit issues or pull requests for improvements, especially for alternative Electrum servers (e.g., Electrs, Esplora) or additional Debian versions.LicenseMIT License. See LICENSE for details.Instructions
+## Contributing
+Submit issues or pull requests for improvements.
