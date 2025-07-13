@@ -96,7 +96,7 @@ ssl_port = 443
 certfile = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
 keyfile = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
 banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
-maxclients = 5000
+maxclients = 10000
 clienttimeout = 300
 rpcport = 8000
 rpchost = 127.0.0.1
@@ -107,7 +107,6 @@ bandwidth-limit = 400000
 # Logging settings
 [logging]
 level = info
-file = /var/log/fulcrum.log
 
 # Database settings
 [database]
@@ -145,7 +144,7 @@ Group=fulcrum
 ExecStart=/usr/local/bin/Fulcrum /etc/fulcrum/fulcrum.conf
 WorkingDirectory=/var/lib/fulcrum
 Restart=always
-LimitNOFILE=65535
+LimitNOFILE=100000
 
 [Install]
 WantedBy=multi-user.target
