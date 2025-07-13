@@ -79,18 +79,32 @@ cat > $CONFIG_FILE <<EOL
 # Fulcrum Configuration
 [bitcoin]
 datadir = /var/lib/fulcrum
-rpcuser = $BITCOIN_RPC_USER
-rpcpassword = $BITCOIN_RPC_PASSWORD
-rpchost = $BITCOIN_RPC_HOST
-rpcport = $BITCOIN_RPC_PORT
+rpcuser = your_rpc_user
+rpcpassword = your_rpc_password
+rpchost = 127.0.0.1
+rpcport = 8332
+workers = 8
+rpc_timeout = 60
+fast-sync = true
 
 [electrum]
 host = 0.0.0.0
 tcp_port = 50001
 ssl_port = 443
-certfile = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
-keyfile = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
-banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
+certfile = /etc/letsencrypt/live/yourdomain.com/fullchain.pem
+keyfile = /etc/letsencrypt/live/yourdomain.com/privkey.pem
+banner = Welcome to Fulcrum Electrum Server at yourdomain.com
+maxclients = 10000
+clienttimeout = 300
+rpcport = 8000
+rpchost = 127.0.0.1
+cache = 2000
+peer-discovery = true
+bandwidth-limit = 400000
+
+[database]
+db-max-mem = 2000
+db-num-shards = 16
 
 [logging]
 level = info
@@ -122,7 +136,7 @@ Group=fulcrum
 ExecStart=/usr/local/bin/Fulcrum /etc/fulcrum/fulcrum.conf
 WorkingDirectory=/var/lib/fulcrum
 Restart=always
-LimitNOFILE=65535
+LimitNOFILE=100000
 
 [Install]
 WantedBy=multi-user.target
