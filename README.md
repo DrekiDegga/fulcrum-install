@@ -97,7 +97,9 @@ The script generates /etc/fulcrum/fulcrum.conf with:
 - SSL: Uses Let’s Encrypt certificates for port 443.
 - Logging: Writes to /var/log/fulcrum.log and systemd journal.
 
-Customize settings in /etc/fulcrum/fulcrum.conf for your hardware (e.g., increase cache to 8000 for 64 GB RAM).Troubleshooting
+Customize settings in /etc/fulcrum/fulcrum.conf for your hardware (e.g., increase cache to 8000 for 64 GB RAM).
+
+## Troubleshooting
 
 - Bitcoin Node Issues:
 
