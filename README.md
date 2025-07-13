@@ -88,7 +88,31 @@ This Bash script automates the installation and configuration of a high-capacity
   sudo nano /etc/fulcrum/fulcrum.conf
   sudo systemctl restart fulcrum
   ```
+## Using FulcrumAdmin
+The FulcrumAdmin tool, installed with Fulcrum at /usr/local/bin/FulcrumAdmin, allows you to monitor and manage your server, including checking the number of connected clients, server status, and address-specific activity. It communicates with Fulcrum via the admin port (127.0.0.1:8000, configured in /etc/fulcrum/fulcrum.conf).Commands
 
+- Check Connected Clients: View the number and details of currently connected clients (up to maxclients=10000).
+
+  bash
+
+  ```bash
+  /usr/local/bin/FulcrumAdmin -p 8000 clients
+  ```
+- Get Server Information: Retrieve server version, uptime, and connection statistics.
+
+  bash
+
+  ```bash
+  /usr/local/bin/FulcrumAdmin -p 8000 getinfo
+  ```
+- Query Address Activity: Monitor balance, UTXOs, or transaction history for a specific Bitcoin address to understand client query patterns.
+
+  bash
+
+  ```bash
+  /usr/local/bin/FulcrumAdmin -p 8000 query <bitcoin-address>
+  ```
+  
 ## Configuration
 The script generates /etc/fulcrum/fulcrum.conf with:
 
