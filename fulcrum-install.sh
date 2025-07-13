@@ -37,7 +37,7 @@ apt-get update
 
 # Install required dependencies
 echo "Installing dependencies..."
-apt-get install -y build-essential qtbase5-dev qt5-qmake qtbase5-dev-tools libssl-dev zlib1g-dev libzmq3-dev certbot python3-certbot-nginx git
+apt-get install -y build-essential qtbase5-dev qt5-qmake qtbase5-dev-tools libssl-dev zlib1g-dev libbz2-dev libzmq3-dev certbot python3-certbot-nginx git
 
 # Install Fulcrum
 echo "Installing Fulcrum..."
