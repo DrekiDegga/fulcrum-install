@@ -112,7 +112,7 @@ rpcuser = $BITCOIN_RPC_USER
 rpcpassword = $BITCOIN_RPC_PASSWORD
 workers = 16
 rpc_timeout = 60
-fast-sync = true
+utxo_cache = 1000
 
 # Electrum server settings
 [electrum]
