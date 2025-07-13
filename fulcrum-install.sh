@@ -2,7 +2,7 @@
 
 # Fulcrum Electrum Server Setup Script for Debian 12 Bookworm
 # Configures Fulcrum with Let's Encrypt SSL, using an existing Bitcoin node
-# Accepts connections on port 443, avoids qt5-default error
+# Accepts connections on port 443
 
 # Exit on error
 set -e
