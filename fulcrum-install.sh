@@ -107,10 +107,9 @@ cat > $CONFIG_FILE <<EOL
 # Bitcoin node settings
 [bitcoin]
 datadir = /var/lib/fulcrum
+bitcoind = $BITCOIN_RPC_HOST:$BITCOIN_RPC_PORT
 rpcuser = $BITCOIN_RPC_USER
 rpcpassword = $BITCOIN_RPC_PASSWORD
-rpchost = $BITCOIN_RPC_HOST
-rpcport = $BITCOIN_RPC_PORT
 workers = 16
 rpc_timeout = 60
 fast-sync = true
