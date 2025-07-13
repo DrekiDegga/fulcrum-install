@@ -4,7 +4,7 @@ This Bash script automates the installation and configuration of a high-capacity
 - Installs Fulcrum with all dependencies, using qmake for compilation.
 - Configures Let’s Encrypt SSL for secure connections on port 443.
 - Includes high-capacity settings: maxclients=10000, cache=4000, utxo_cache=1000, workers=16, db-num-shards=16.
-- Validates Bitcoin RPC credentials and ensures compatibility with Bitcoin Core.
+- Validates Bitcoin RPC credentials.
 - Sets up logging to /var/log/fulcrum.log and systemd journal.
 - Configures firewall rules (if ufw is installed) for ports 443 and 50001.
 
