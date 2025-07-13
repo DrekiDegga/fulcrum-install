@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Fulcrum Electrum Server Setup Script for Debian Bookworm
+# Fulcrum Electrum Server Setup Script for Debian 12 Bookworm
 # Configures Fulcrum with Let's Encrypt SSL, using an existing Bitcoin node
-# Accepts connections on port 443
+# Accepts connections on port 443, avoids qt5-default error
 
 # Exit on error
 set -e
@@ -37,7 +37,7 @@ apt-get update
 
 # Install required dependencies
 echo "Installing dependencies..."
-apt-get install -y build-essential cmake libssl-dev zlib1g-dev qtbase5-dev qt5-default libzmq3-dev certbot python3-certbot-nginx git
+apt-get install -y build-essential cmake libssl-dev zlib1g-dev qtbase5-dev qt5-qmake qtbase5-dev-tools libzmq3-dev certbot python3-certbot-nginx git
 
 # Install Fulcrum
 echo "Installing Fulcrum..."
@@ -73,28 +73,30 @@ BITCOIN_RPC_PORT=${BITCOIN_RPC_PORT:-8332}
 mkdir -p /etc/fulcrum
 CONFIG_FILE="/etc/fulcrum/fulcrum.conf"
 
-# Write Fulcrum configuration
+# Write Fulcrum configuration with optimized settings for high-capacity server
 echo "Creating Fulcrum configuration..."
 cat > $CONFIG_FILE <<EOL
 # Fulcrum Configuration
+# Bitcoin node settings
 [bitcoin]
 datadir = /var/lib/fulcrum
-rpcuser = your_rpc_user
-rpcpassword = your_rpc_password
-rpchost = 127.0.0.1
-rpcport = 8332
+rpcuser = $BITCOIN_RPC_USER
+rpcpassword = $BITCOIN_RPC_PASSWORD
+rpchost = $BITCOIN_RPC_HOST
+rpcport = $BITCOIN_RPC_PORT
 workers = 8
 rpc_timeout = 60
 fast-sync = true
 
+# Electrum server settings
 [electrum]
 host = 0.0.0.0
 tcp_port = 50001
 ssl_port = 443
-certfile = /etc/letsencrypt/live/yourdomain.com/fullchain.pem
-keyfile = /etc/letsencrypt/live/yourdomain.com/privkey.pem
-banner = Welcome to Fulcrum Electrum Server at yourdomain.com
-maxclients = 10000
+certfile = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
+keyfile = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
+banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
+maxclients = 5000
 clienttimeout = 300
 rpcport = 8000
 rpchost = 127.0.0.1
@@ -102,13 +104,20 @@ cache = 2000
 peer-discovery = true
 bandwidth-limit = 400000
 
-[database]
-db-max-mem = 2000
-db-num-shards = 16
-
+# Logging settings
 [logging]
 level = info
+file = /var/log/fulcrum.log
+
+# Database settings
+[database]
+db-max-mem = 2000
+db-num-shards = 32
 EOL
+
+# Set log file permissions
+touch /var/log/fulcrum.log
+chown fulcrum:fulcrum /var/log/fulcrum.log
 
 # Install Nginx for Let's Encrypt validation
 if ! command_exists nginx; then
@@ -136,7 +145,7 @@ Group=fulcrum
 ExecStart=/usr/local/bin/Fulcrum /etc/fulcrum/fulcrum.conf
 WorkingDirectory=/var/lib/fulcrum
 Restart=always
-LimitNOFILE=100000
+LimitNOFILE=65535
 
 [Install]
 WantedBy=multi-user.target
@@ -162,3 +171,4 @@ echo "- TCP: $PUBLIC_DNS:50001"
 echo "- SSL: $PUBLIC_DNS:443"
 echo "Ensure your Bitcoin node is fully synced and running."
 echo "You may need to configure your DNS to point $PUBLIC_DNS to this server's public IP."
+echo "Monitor logs with: journalctl -u fulcrum -f"
