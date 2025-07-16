@@ -121,8 +121,8 @@ utxo_cache = 1000
 # Electrum server settings
 [electrum]
 host = 0.0.0.0
-tcp_port = 50001
-ssl_port = 443
+tcp = 0.0.0.0:50001
+ssl = 0.0.0.0:443
 certfile = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
 keyfile = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
 banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
