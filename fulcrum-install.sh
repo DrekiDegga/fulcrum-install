@@ -211,4 +211,52 @@ if [ ! -f "/etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem" ]; then
 fi
 
 # Stop and disable Nginx to prevent port 443 conflicts
-echo "Stopping and disabling
+echo "Stopping and disabling Nginx..."
+systemctl stop nginx
+systemctl disable nginx
+
+# Set up Let's Encrypt certificate renewal
+echo "Setting up certificate renewal..."
+echo "0 0 * * * certbot renew --quiet" | tee /etc/cron.d/certbot-renew
+
+# Create systemd service for Fulcrum
+echo "Creating Fulcrum systemd service..."
+cat > /etc/systemd/system/fulcrum.service <<EOL
+[Unit]
+Description=Fulcrum Electrum Server
+After=network.target
+
+[Service]
+User=fulcrum
+Group=fulcrum
+ExecStart=/usr/local/bin/Fulcrum /etc/fulcrum/fulcrum.conf
+WorkingDirectory=/var/lib/fulcrum
+Restart=always
+LimitNOFILE=100000
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+# Reload systemd and enable service
+systemctl daemon-reload
+systemctl enable fulcrum
+systemctl start fulcrum
+
+# Open firewall ports (if ufw is installed)
+if command_exists ufw; then
+    echo "Configuring firewall..."
+    ufw allow 443/tcp
+    ufw allow 50001/tcp
+    echo "Firewall rules updated."
+fi
+
+# Display completion message
+echo "Fulcrum server setup complete with Tor connectivity!"
+echo "Server is running and accessible at:"
+echo "- Clearnet TCP: $PUBLIC_DNS:50001"
+echo "- Clearnet SSL: $PUBLIC_DNS:443"
+echo "- Tor TCP: ${ONION_ADDRESS}:50001"
+echo "Ensure your Bitcoin node is fully synced and running."
+echo "Monitor logs with: journalctl -u fulcrum -f"
+echo "If the Tor onion address is unavailable, check Tor logs with: journalctl -u tor -f"
