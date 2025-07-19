@@ -2,7 +2,8 @@
 
 # Fulcrum Electrum Server Setup Script for Debian 12 Bookworm
 # Configures Fulcrum with Let's Encrypt SSL (port 443), Tor hidden service (TCP 50001), and an existing Bitcoin node
-# Includes setcap for port 443 binding, Nginx cleanup, certificate renewal, and enhanced error handling
+# Includes setcap for port 443, announcement settings (hostname, public_tcp_port, public_ssl_port, tor_hostname, tor_tcp_port, tor_banner),
+# Tor proxy for outbound connections, Nginx cleanup, certificate renewal, enhanced error handling, and optional commented settings
 # No ZMQ configuration, as Bitcoin node lacks ZMQ support
 
 # Exit on error
@@ -113,11 +114,31 @@ prompt_for_input "Enter Bitcoin RPC password" BITCOIN_RPC_PASSWORD
 prompt_for_input "Enter Bitcoin RPC host" BITCOIN_RPC_HOST "127.0.0.1"
 prompt_for_input "Enter Bitcoin RPC port" BITCOIN_RPC_PORT "8332"
 
+# Configure Tor hidden service
+echo "Configuring Tor hidden service..."
+mkdir -p /var/lib/tor/hidden_service_fulcrum
+chown -R tor:tor /var/lib/tor/hidden_service_fulcrum
+chmod 700 /var/lib/tor/hidden_service_fulcrum
+cat >> /etc/tor/torrc <<EOL
+# Hidden Service for Fulcrum TCP
+HiddenServiceDir /var/lib/tor/hidden_service_fulcrum/
+HiddenServiceVersion 3
+HiddenServicePort 50001 127.0.0.1:50001
+EOL
+systemctl reload tor
+
+# Wait for Tor to generate onion address
+sleep 5
+ONION_ADDRESS=$(cat /var/lib/tor/hidden_service_fulcrum/hostname 2>/dev/null || echo "unavailable")
+if [ "$ONION_ADDRESS" = "unavailable" ]; then
+    echo "Warning: Failed to retrieve Tor onion address. Check Tor logs with 'journalctl -u tor -f'."
+fi
+
 # Create Fulcrum configuration directory
 mkdir -p /etc/fulcrum
 CONFIG_FILE="/etc/fulcrum/fulcrum.conf"
 
-# Write Fulcrum configuration
+# Write Fulcrum configuration with announcement, Tor proxy, and commented optional settings
 echo "Creating Fulcrum configuration..."
 cat > $CONFIG_FILE <<EOL
 # Fulcrum Configuration
@@ -134,6 +155,13 @@ tcp = 0.0.0.0:50001
 ssl = 0.0.0.0:443
 cert = /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem
 key = /etc/letsencrypt/live/$PUBLIC_DNS/privkey.pem
+hostname = $PUBLIC_DNS
+public_tcp_port = 50001
+public_ssl_port = 443
+tor_hostname = $ONION_ADDRESS
+tor_banner = Welcome to Fulcrum Electrum Server (Tor) at $ONION_ADDRESS
+tor_tcp_port = 50001
+tor_proxy = socks5://127.0.0.1:9050
 banner = Welcome to Fulcrum Electrum Server at $PUBLIC_DNS
 maxclients = 1000
 clienttimeout = 300
@@ -142,6 +170,15 @@ rpchost = 127.0.0.1
 cache = 2000
 peer-discovery = true
 bandwidth-limit = 400000
+# Optional settings (uncomment to enable):
+# max_clients_per_ip = 48
+# max_pending_connections = 120
+# max_subs = 20000000
+# max_subs_per_ip = 120000
+# bitcoind_throttle = 200 80 20
+# stats = 0.0.0.0:8080
+# polltime = 1.0
+# txhash_cache = 512
 
 [logging]
 level = info
@@ -171,7 +208,7 @@ certbot certonly --nginx -d $PUBLIC_DNS --non-interactive --agree-tos --email ad
 if [ ! -f /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem ]; then
     echo "Error: Certificate not found at /etc/letsencrypt/live/$PUBLIC_DNS/fullchain.pem."
     exit 1
-fi
+}
 chgrp -R fulcrum /etc/letsencrypt/{live,archive}
 chmod -R g+rx /etc/letsencrypt/{live,archive}
 
@@ -183,26 +220,6 @@ systemctl disable nginx
 # Set up Let's Encrypt certificate renewal
 echo "Setting up certificate renewal..."
 echo "0 0 * * * certbot renew --quiet" | tee /etc/cron.d/certbot-renew
-
-# Configure Tor hidden service
-echo "Configuring Tor hidden service..."
-mkdir -p /var/lib/tor/hidden_service_fulcrum
-chown -R tor:tor /var/lib/tor/hidden_service_fulcrum
-chmod 700 /var/lib/tor/hidden_service_fulcrum
-cat >> /etc/tor/torrc <<EOL
-# Hidden Service for Fulcrum TCP
-HiddenServiceDir /var/lib/tor/hidden_service_fulcrum/
-HiddenServiceVersion 3
-HiddenServicePort 50001 127.0.0.1:50001
-EOL
-systemctl reload tor
-
-# Wait for Tor to generate onion address
-sleep 5
-ONION_ADDRESS=$(cat /var/lib/tor/hidden_service_fulcrum/hostname 2>/dev/null || echo "unavailable")
-if [ "$ONION_ADDRESS" = "unavailable" ]; then
-    echo "Warning: Failed to retrieve Tor onion address. Check Tor logs with 'journalctl -u tor -f'."
-fi
 
 # Create systemd service for Fulcrum
 echo "Creating Fulcrum systemd service..."
